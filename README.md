@@ -61,3 +61,40 @@ end
 
 Beezlebub.new # never returns
 ```
+
+## Relevance
+
+### What is the point of a procedure which can only be running at most once?
+If it is guaranteed to be running at most once, now you have serialized
+the process. A serialized process can't interfere with itself. This makes
+it easier to reason about correctness of the process.
+
+### What is the difference between using this and simply running a script?
+If you have concurrent requests, each of which may run this script, then you
+will have multiple instances of the script running at a time. See previous
+question on why that is bad. If you want only one such script running at a time
+you now need serialization. Having a pokable demon running solves the
+serialization.
+
+### The way poke works, you are guaranteed to miss some pokes when throughput ramps up. What's up with that?
+The use case I have in my head involves processing unprocessed messages. As
+long as my demon does not lock up or crash without reviving, messages will get
+processed next time it wakes up.
+
+### Why don't you just make a cron job poll once a minute?
+That would be unresponsive. Each request that emits messages can optionally
+issue a poke to attempt to immediately handle the new message.
+
+### Why don't you poll once a second?
+Not as unresponsive as a cron job, but now we have issues if the processing
+takes more than a second. I will begin running over myself.
+
+### Busy loop!
+Like all polling solutions its a waste of CPU and network.
+
+### Why don't you lock a unix semaphore on run so a second instance of the script can't run?
+Too many games to ensure the semaphore doesn't get stuck locked due to
+an abnormal termination of the script.
+
+### Problems of this class can be nicely solved using a redis-based job queue server.
+Maybe they can.
